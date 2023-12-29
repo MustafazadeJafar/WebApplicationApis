@@ -1,4 +1,10 @@
-namespace WebApplication1;
+using CustomApi.DAL.Contexts;
+using Microsoft.EntityFrameworkCore;
+using CustomApi.API.Controllers;
+
+
+
+namespace CustomApi.API;
 
 public class Program
 {
@@ -7,7 +13,10 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
-        
+        builder.Services.AddDbContext<CustomApiDbContext>(options =>
+        {
+            options.UseSqlServer(builder.Configuration.GetConnectionString("Default"));
+        });
 
         builder.Services.AddControllers();
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -25,8 +34,8 @@ public class Program
 
         app.UseAuthorization();
 
-
         app.MapControllers();
+        app.MapGameSessionEndpoints();
 
         app.Run();
     }
