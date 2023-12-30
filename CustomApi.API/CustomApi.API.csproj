@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\CustomApi.DAL\CustomApi.DAL.csproj" />
+    <ProjectReference Include="..\CustomApi.Business\CustomApi.Business.csproj" />
   </ItemGroup>
 
 </Project>

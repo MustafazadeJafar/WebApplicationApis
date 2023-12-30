@@ -1,6 +1,5 @@
 using CustomApi.DAL.Contexts;
 using Microsoft.EntityFrameworkCore;
-using CustomApi.API.Controllers;
 
 
 
@@ -35,7 +34,6 @@ public class Program
         app.UseAuthorization();
 
         app.MapControllers();
-        app.MapGameSessionEndpoints();
 
         app.Run();
     }

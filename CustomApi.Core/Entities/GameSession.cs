@@ -8,14 +8,5 @@ public class GameSession : BaseEntity
     public string RoomName { get; set; }
 
     [NotMapped]
-     internal  bool? IsActive {
-        get
-        {
-            throw new NotImplementedException();
-        }
-        set
-        {
-            throw new NotImplementedException();
-        }
-    }
+    internal bool? IsActive { get; set; } = false;
 }
