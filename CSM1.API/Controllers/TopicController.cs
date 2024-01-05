@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using CSM1.Business.Dtos.TopicDtos;
+using CSM1.Business.Exceptions.Topic;
+using CSM1.Business.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -6,37 +9,58 @@ namespace CSM1.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class TopicController : ControllerBase
+public class TopicsController : ControllerBase
 {
-    // GET: api/<TopicController>
+    ITopicService _service { get; }
+
+    public TopicsController(ITopicService service)
+    {
+        _service = service;
+    }
     [HttpGet]
-    public IEnumerable<string> Get()
+    public IActionResult Get()
     {
-        return new string[] { "value1", "value2" };
+        return Ok(_service.GetAll());
     }
-
-    // GET api/<TopicController>/5
     [HttpGet("{id}")]
-    public string Get(int id)
+    public async Task<IActionResult> Get(int id)
     {
-        return "value";
+        try
+        {
+            return Ok(await _service.GetByIdAsync(id));
+        }
+        catch (Exception ex)
+        {
+            return Problem(ex.Message);
+        }
     }
-
-    // POST api/<TopicController>
     [HttpPost]
-    public void Post([FromBody] string value)
+    public async Task<IActionResult> Post(TopicCreateDto dto)
     {
+        try
+        {
+            await _service.CreateAsync(dto);
+            return StatusCode(StatusCodes.Status201Created);
+        }
+        catch (TopicExistException ex)
+        {
+            return Conflict(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
-
-    // PUT api/<TopicController>/5
-    [HttpPut("{id}")]
-    public void Put(int id, [FromBody] string value)
-    {
-    }
-
-    // DELETE api/<TopicController>/5
     [HttpDelete("{id}")]
-    public void Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
+        await _service.RemoveAsync(id);
+        return Ok();
+    }
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, TopicUpdateDto dto)
+    {
+        await _service.UpdateAsync(id, dto);
+        return Ok();
     }
 }

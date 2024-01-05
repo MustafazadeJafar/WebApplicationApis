@@ -3,16 +3,21 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Reflection;
 using CSM1.Core.Entities;
 using CSM1.Core.Entities.Common;
-using CSM1.DAL.Configurations;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace CSM1.DAL.Contexts;
 
-public class CSM1DbContext : DbContext
+public class CSM1DbContext : IdentityDbContext<AppUser>
 {
     public CSM1DbContext(DbContextOptions opt) : base(opt)
     {
     }
+
+    // //
     public DbSet<Topic> Topics { get; set; }
+    public DbSet<AppUser> AppUsers { get; set; }
+
+    // //
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         var entries = ChangeTracker.Entries<BaseEntity>();

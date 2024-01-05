@@ -1,3 +1,9 @@
+using CSM1.Business;
+using CSM1.Core.Entities;
+using CSM1.DAL.Contexts;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
 namespace CSM1.API;
 
 public class Program
@@ -7,7 +13,23 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
-        // testing holy power.4
+        builder.Services.AddDbContext<CSM1DbContext>(options =>
+        {
+            options.UseSqlServer(builder.Configuration.GetConnectionString("Local"));
+        }).AddIdentity<AppUser, IdentityRole>(opt =>
+        {
+            opt.SignIn.RequireConfirmedEmail = true;
+            opt.User.RequireUniqueEmail = true;
+            opt.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyz0123456789._";
+            opt.Lockout.MaxFailedAccessAttempts = 5;
+            opt.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
+            opt.Password.RequireNonAlphanumeric = false;
+            opt.Password.RequiredLength = 4;
+        }).AddDefaultTokenProviders().AddEntityFrameworkStores<CSM1DbContext>();
+
+        builder.Services.AddRepositories();
+        builder.Services.AddServices();
+        builder.Services.AddBusinessLayer();
 
         builder.Services.AddControllers();
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
