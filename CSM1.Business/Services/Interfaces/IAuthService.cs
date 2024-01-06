@@ -7,7 +7,7 @@ public interface IAuthService
 {
     public Task<IdentityResult> Register(RegisterDto dto);
     public Task<string> Login(LoginDto dto);
-    public Task<bool> TokenCheck(string token);
+    public Task<bool> ConfirmEmail(string token);
     public Task Logout();
     public Task CreateRoles();
 

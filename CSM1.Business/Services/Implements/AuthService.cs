@@ -1,4 +1,5 @@
 ﻿using CSM1.Business.Dtos.AuthDtos;
+using CSM1.Business.Extensions;
 using CSM1.Business.ExternalServices.Interfaces;
 using CSM1.Business.Services.Interfaces;
 using CSM1.Core.Entities;
@@ -9,6 +10,7 @@ namespace CSM1.Business.Services.Implements;
 
 public class AuthService : IAuthService
 {
+    AppUser _universal;
     SignInManager<AppUser> _signInManager { get; }
     UserManager<AppUser> _userManager { get; }
     RoleManager<IdentityRole> _roleManager { get; }
@@ -63,6 +65,8 @@ public class AuthService : IAuthService
         //    body = readtext.ReadToEnd();
         //}
         //isHtml = true;
+        body += "http://" + StaticHolderExtension.Hosting + "/api/Auth/Confirm?token=" + token.Token;
+
         this._emailService.Send(user.Email, "Welcome to club buddy", body, isHtml);
 
         return roleResult;
@@ -116,10 +120,23 @@ public class AuthService : IAuthService
         return ;
     }
 
-    public async Task<bool> TokenCheck(string token)
+    async Task<bool> TokenCheck(string token)
     {
-        AppUser user;
-        user = await this._userManager.Users.FirstAsync(u => u.Token == token && u.TokensExpr > DateTime.Now);
-        return user != null;
+        _universal = await this._userManager.Users.FirstAsync(u => u.Token == token && u.TokensExpr > DateTime.Now);
+        return _universal != null;
+    }
+
+    public async Task<bool> ConfirmEmail(string token)
+    {
+        if(await TokenCheck(token))
+        {
+            _universal.EmailConfirmed = true;
+            await this._userManager.UpdateAsync(_universal);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 }

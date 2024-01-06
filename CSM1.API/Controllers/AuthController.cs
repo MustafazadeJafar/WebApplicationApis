@@ -1,6 +1,8 @@
 ﻿using CSM1.Business.Dtos.AuthDtos;
+using CSM1.Business.Extensions;
 using CSM1.Business.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -28,14 +30,29 @@ public class AuthController : ControllerBase
         //this._userManager = userManager;
         //this._roleManager = roleManager;
         //this._emailService = emailService;
+
         this._authService = authService;
+    }
+
+    [HttpGet("Confirm")]
+    public async Task<IActionResult> Get(string token)
+    {
+        if (await this._authService.ConfirmEmail(token)) 
+        {
+            return Ok("confirmed");
+        }
+        else 
+        { 
+            return BadRequest(); 
+        }
     }
 
     // POST api/<AuthController>/Register
     [HttpPost("Register")]
-    public async Task Post(RegisterDto dto)
+    public async Task<string> Post(RegisterDto dto)
     {
-        await this._authService.Register(dto);
+        StaticHolderExtension.Hosting = HttpContext.Request.Host.Value;
+        return ((await this._authService.Register(dto)).Succeeded.ToString());
     }
 
     // POST api/<AuthController>/Login
@@ -46,8 +63,8 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("CreateRoles")]
-    public void Get()
+    public async Task Get()
     {
-        this._authService.CreateRoles();
+        await this._authService.CreateRoles();
     }
 }
