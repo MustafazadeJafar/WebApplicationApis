@@ -1,10 +1,12 @@
 ﻿using CSM1.Business.Dtos.AuthDtos;
-using CSM1.Business.Extensions;
 using CSM1.Business.ExternalServices.Interfaces;
 using CSM1.Business.Services.Interfaces;
 using CSM1.Core.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using CSM1.Core.Entities.Static;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
 
 namespace CSM1.Business.Services.Implements;
 
@@ -15,16 +17,19 @@ public class AuthService : IAuthService
     UserManager<AppUser> _userManager { get; }
     RoleManager<IdentityRole> _roleManager { get; }
     IEmailService _emailService { get; }
+    IHttpContextAccessor _context { get; }
 
     public AuthService(SignInManager<AppUser> signInManager,
         UserManager<AppUser> userManager,
         RoleManager<IdentityRole> roleManager,
-        IEmailService emailService)
+        IEmailService emailService,
+        IHttpContextAccessor context)
     {
-        _signInManager = signInManager;
-        _userManager = userManager;
-        _roleManager = roleManager;
-        _emailService = emailService;
+        this._signInManager = signInManager;
+        this._userManager = userManager;
+        this._roleManager = roleManager;
+        this._emailService = emailService;
+        this._context = context;
     }
 
     TokenDto CreateToken()
@@ -37,7 +42,7 @@ public class AuthService : IAuthService
             token += charset[new Random().Next(charset.Length)];
         }
 
-        return new TokenDto() { Token = token, TokensExpr = DateTime.Now.AddMonths(3), };
+        return new TokenDto() { Token = token, TokensExpr = DateTime.Now.AddDays(3), };
     }
 
     public async Task<IdentityResult> Register(RegisterDto dto)
@@ -50,12 +55,12 @@ public class AuthService : IAuthService
             Email = dto.Email,
             UserName = dto.Username,
             Token = token.Token,
-            TokensExpr = (DateTime)token.TokensExpr,
+            TokensExpr = token.TokensExpr,
         };
         var result = await this._userManager.CreateAsync(user, dto.Password);
         if (!result.Succeeded) return result;
 
-        var roleResult = await this._userManager.AddToRoleAsync(user, IAuthService.AuthRoles.User.ToString());
+        var roleResult = await this._userManager.AddToRoleAsync(user, nameof(Roles.AuthRoles.User));
         if (!roleResult.Succeeded) return roleResult;
 
         string body = "";
@@ -65,7 +70,8 @@ public class AuthService : IAuthService
         //    body = readtext.ReadToEnd();
         //}
         //isHtml = true;
-        body += "http://" + StaticHolderExtension.Hosting + "/api/Auth/Confirm?token=" + token.Token;
+        body += this._context.HttpContext.Request.Scheme + this._context.HttpContext.Request.Host.Value +
+            "/api/Auth/Confirm?token=" + token.Token;
 
         this._emailService.Send(user.Email, "Welcome to club buddy", body, isHtml);
 
@@ -88,7 +94,7 @@ public class AuthService : IAuthService
 
         TokenDto token = this.CreateToken();
         user.Token = token.Token;
-        user.TokensExpr = (DateTime)token.TokensExpr;
+        user.TokensExpr = token.TokensExpr;
 
         var result = await this._signInManager.PasswordSignInAsync(user, dto.Password, dto.IsRemember, true);
 
@@ -101,23 +107,28 @@ public class AuthService : IAuthService
         await this._signInManager.SignOutAsync();
     }
 
-    public async Task CreateRoles()
+    //[Authorize(Roles = "Admin, SuperAdmin")] ?
+    public async Task CreateRoles(string token)
     {
-        foreach (var item in Enum.GetValues<IAuthService.AuthRoles>())
+        if (!await this.TokenCheck(token)) return;
+        if (!(await this._userManager.GetRolesAsync(this._universal)).
+                Any(r => r == nameof(Roles.AuthRoles.Admin) || r == nameof(Roles.AuthRoles.SuperAdmin))) return;
+
+        foreach (var item in Enum.GetValues<Roles.AuthRoles>())
         {
-            if (!await this._roleManager.RoleExistsAsync(item.ToString()))
+            if (!await this._roleManager.RoleExistsAsync(nameof(item)))
             {
                 var result = await this._roleManager.CreateAsync(new IdentityRole
                 {
-                    Name = item.ToString()
+                    Name = nameof(item)
                 });
                 if (!result.Succeeded)
                 {
-                    return ;
+                    return;
                 }
             }
         }
-        return ;
+        return;
     }
 
     async Task<bool> TokenCheck(string token)
@@ -128,7 +139,7 @@ public class AuthService : IAuthService
 
     public async Task<bool> ConfirmEmail(string token)
     {
-        if(await TokenCheck(token))
+        if (await TokenCheck(token))
         {
             _universal.EmailConfirmed = true;
             await this._userManager.UpdateAsync(_universal);

@@ -3,6 +3,8 @@
 public class BaseEntity
 {
     public int Id { get; set; }
+
+    // //
     public virtual DateTime CreatedTime { get; set; }
-    public virtual bool IsDeleted { get; set; }
+    public virtual bool IsActive { get; set; } = true;
 }

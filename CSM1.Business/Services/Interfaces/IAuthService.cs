@@ -9,12 +9,6 @@ public interface IAuthService
     public Task<string> Login(LoginDto dto);
     public Task<bool> ConfirmEmail(string token);
     public Task Logout();
-    public Task CreateRoles();
+    public Task CreateRoles(string token);
 
-    public enum AuthRoles
-    {
-        User,
-        Admin,
-        SuperAdmin,
-    }
 }

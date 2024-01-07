@@ -51,7 +51,6 @@ public class AuthController : ControllerBase
     [HttpPost("Register")]
     public async Task<string> Post(RegisterDto dto)
     {
-        StaticHolderExtension.Hosting = HttpContext.Request.Host.Value;
         return ((await this._authService.Register(dto)).Succeeded.ToString());
     }
 
@@ -63,8 +62,8 @@ public class AuthController : ControllerBase
     }
 
     [HttpGet("CreateRoles")]
-    public async Task Get()
+    public async Task Post(string token)
     {
-        await this._authService.CreateRoles();
+        await this._authService.CreateRoles(token);
     }
 }
