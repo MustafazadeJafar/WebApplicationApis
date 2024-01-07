@@ -1,8 +1,6 @@
 ﻿using CSM1.Business.Dtos.AuthDtos;
-using CSM1.Business.Extensions;
 using CSM1.Business.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -12,25 +10,10 @@ namespace CSM1.API.Controllers;
 [ApiController]
 public class AuthController : ControllerBase
 {
-    //SignInManager<AppUser> _signInManager { get; }
-    //UserManager<AppUser> _userManager { get; }
-    //RoleManager<IdentityRole> _roleManager { get; }
-    //IEmailService _emailService { get; }
-
     IAuthService _authService { get; }
 
-    public AuthController(
-        //SignInManager<AppUser> signInManager,
-        //UserManager<AppUser> userManager,
-        //RoleManager<IdentityRole> roleManager,
-        //IEmailService emailService,
-        IAuthService authService)
+    public AuthController(IAuthService authService)
     {
-        //this._signInManager = signInManager;
-        //this._userManager = userManager;
-        //this._roleManager = roleManager;
-        //this._emailService = emailService;
-
         this._authService = authService;
     }
 

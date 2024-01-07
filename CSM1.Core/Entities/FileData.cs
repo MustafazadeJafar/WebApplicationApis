@@ -1,6 +1,6 @@
 ﻿namespace CSM1.Core.Entities;
 
-public class FileData
+public class FileData : BaseEntity
 {
     public int BlogId { get; set; }
 

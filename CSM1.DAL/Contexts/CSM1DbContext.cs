@@ -15,6 +15,9 @@ public class CSM1DbContext : IdentityDbContext<AppUser>
 
     // //
     public DbSet<Topic> Topics { get; set; }
+    public DbSet<Blog> Blogs { get; set; }
+    public DbSet<BlogTopic> BlogTopics { get; set; }
+    public DbSet<FileData> FileDatas { get; set; }
     public DbSet<AppUser> AppUsers { get; set; }
 
     // //

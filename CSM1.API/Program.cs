@@ -1,5 +1,4 @@
 using CSM1.Business;
-using CSM1.Business.Extensions;
 using CSM1.Core.Entities;
 using CSM1.DAL.Contexts;
 using Microsoft.AspNetCore.Identity;

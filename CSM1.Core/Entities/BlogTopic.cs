@@ -1,6 +1,6 @@
 ﻿namespace CSM1.Core.Entities;
 
-public class BlogTopic
+public class BlogTopic : BaseEntity
 {
     public int BlogId { get; set; }
     public int TopicId { get; set; }
