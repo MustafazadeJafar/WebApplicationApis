@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using CSM1.Business.Extensions;
+using FluentValidation;
 
 namespace CSM1.Business.Dtos.TopicDtos;
 
@@ -12,7 +13,6 @@ public class TopicCreateDtoValidator : AbstractValidator<TopicCreateDto>
     {
         RuleFor(x => x.Name)
             .NotEmpty()
-            .MinimumLength(2)
-            .MaximumLength(32);
+            .CustomLength(2,32);
     }
 }

@@ -2,6 +2,6 @@
 
 namespace CSM1.Business.Repositories.Interfaces;
 
-internal interface IBlogRepository : IGenericRepository<Blog>
+public interface IBlogRepository : IGenericRepository<Blog>
 {
 }

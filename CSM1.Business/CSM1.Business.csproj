@@ -15,4 +15,8 @@
     <ProjectReference Include="..\CSM1.DAL\CSM1.DAL.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Dtos\FileDataDtos\" />
+  </ItemGroup>
+
 </Project>

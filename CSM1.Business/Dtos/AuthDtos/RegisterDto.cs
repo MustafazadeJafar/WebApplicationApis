@@ -1,4 +1,5 @@
-﻿using FluentValidation;
+﻿using CSM1.Business.Extensions;
+using FluentValidation;
 
 namespace CSM1.Business.Dtos.AuthDtos;
 
@@ -18,16 +19,21 @@ public class RegisterDtoValidator : AbstractValidator<RegisterDto>
     {
         RuleFor(x => x.Name).
             NotEmpty().
-            MinimumLength(2).
-            MaximumLength(32);
+            CustomLength(2, 32);
         RuleFor(x => x.Surname).
             NotEmpty().
-            MinimumLength(2).
-            MaximumLength(50);
+            CustomLength(2, 32);
         RuleFor(x => x.Username).
-            NotEmpty().
-            NotNull().
-            MinimumLength(2).
-            MaximumLength(25);
+            NotNullNotEmpty().
+            CustomLength(2, 32);
+        RuleFor(x => x.Email).
+            NotNullNotEmpty().
+            EmailAddress();
+        RuleFor(x => x.Password).
+            NotNullNotEmpty().
+            MinimumLength(4).
+            Must(x => x.Any(Char.IsUpper)).
+            Must(x => x.Any(Char.IsLower)).
+            Must(x => x.Any(Char.IsDigit));
     }
 }

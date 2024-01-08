@@ -20,7 +20,7 @@ public class Program
         {
             opt.SignIn.RequireConfirmedEmail = true;
             opt.User.RequireUniqueEmail = true;
-            opt.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyz0123456789._";
+            opt.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyz0123456789";
             opt.Lockout.MaxFailedAccessAttempts = 5;
             opt.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
             opt.Password.RequireNonAlphanumeric = false;
