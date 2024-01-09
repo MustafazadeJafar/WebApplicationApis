@@ -1,7 +1,7 @@
 ﻿using CSM1.Business.Dtos.AuthDtos;
 using CSM1.Business.ExternalServices.Interfaces;
-using CSM1.Core.Entities;
-using Microsoft.AspNetCore.Identity;
+using CSM1.Business.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -11,19 +11,26 @@ namespace CSM1.Business.ExternalServices.Implements;
 
 public class TokenService : ITokenService
 {
+    JwtTokenParameters _parameters { get; }
+
+    public TokenService(IConfiguration configuration)
+    {
+        this._parameters = configuration.GetSection("Jwt").Get<JwtTokenParameters>();
+    }
+
     public TokenDto CreateUserToken(AppUserDto user)
     {
         List<Claim> claims = new List<Claim>();
-        claims.Add(new(ClaimTypes.Name, user.UserName));
         claims.Add(new(ClaimTypes.GivenName, user.Fullname));
-        claims.Add(new(ClaimTypes.Role, user.MainRole));
+        claims.Add(new("MainRole", user.MainRole));
+        claims.Add(new("UserName", user.UserName));
         claims.Add(new("BirthDay", user.BirthDay.ToString()));
 
-        DateTime expires = DateTime.UtcNow.AddMinutes(3);
+        DateTime expires = DateTime.UtcNow.AddMinutes(this._parameters.ExpireMinutes);
 
-        SymmetricSecurityKey ssk = new(Encoding.UTF8.GetBytes("f08567d7-cef3-4781-ab31-032fcc87bf16"));
+        SymmetricSecurityKey ssk = new(Encoding.UTF8.GetBytes(this._parameters.Salt));
         SigningCredentials sc = new(ssk, SecurityAlgorithms.HmacSha256Signature);
-        JwtSecurityToken jst = new("h", "h.api", claims, DateTime.UtcNow, expires, sc);
+        JwtSecurityToken jst = new(this._parameters.Issuer, this._parameters.Audience, claims, DateTime.UtcNow, expires, sc);
 
         return new TokenDto()
         {
@@ -31,4 +38,15 @@ public class TokenService : ITokenService
             Expires = expires,
         };
     }
+
+    public async Task<bool> VakidateToken(string token)
+    {
+        JwtSecurityTokenHandler handler = new();
+        var result = await handler.ValidateTokenAsync(token, ITokenService.JwtTokenValidationParametrs(this._parameters));
+        return result.IsValid;
+    }
+
+    public string GetClaim(string token, string type)
+        => new JwtSecurityTokenHandler().ReadJwtToken(token).Claims.First(c => c.Type == type).Value;
+    
 }

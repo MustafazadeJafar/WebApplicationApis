@@ -1,7 +1,19 @@
-﻿namespace CSM1.Business.Dtos.AuthDtos;
+﻿using CSM1.Core.Entities;
+
+namespace CSM1.Business.Dtos.AuthDtos;
 
 public class AppUserDto
 {
+    public AppUserDto(AppUser user, string role)
+    {
+        UserName = user.UserName;
+        Email = user.Email;
+        MainRole = role;
+        Name = user.Name;
+        Surname = user.Surname;
+        BirthDay = user.BirthDay;
+    }
+
     public string UserName { get; set; }
     public string Email { get; set; }
 

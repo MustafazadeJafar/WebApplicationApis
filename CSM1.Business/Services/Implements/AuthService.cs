@@ -33,6 +33,24 @@ public class AuthService : IAuthService
         this._tokenService = tokenService;
     }
 
+    public async Task SendConfirmation(AppUserDto dto)
+    {
+        string body = "";
+        bool isHtml = false;
+        //using (StreamReader readtext = new StreamReader("template1.html"))
+        //{
+        //    body = readtext.ReadToEnd();
+        //    isHtml = true;
+        //}
+
+        body += this._context.HttpContext?.Request.Scheme + "://" +
+            this._context.HttpContext?.Request.Host.Value + "/api/Auth/Confirm?token=" +
+            this._tokenService.CreateUserToken(dto).Token;
+
+        throw new EmailNotConfirmedException(body); // this way email service skipped due to lazy author not wanting to create app password
+        this._emailService.Send(dto.Email, "Welcome to club buddy", body, isHtml);
+    }
+
     public async Task<bool> Register(RegisterDto dto)
     {
         var user = new AppUser
@@ -43,32 +61,14 @@ public class AuthService : IAuthService
             UserName = dto.Username,
         };
         var result = await this._userManager.CreateAsync(user, dto.Password);
-        if (!result.Succeeded) throw new UsernameExistException();
+        if (!result.Succeeded) throw new UsernameOrEmailExistException();
 
         //result = 
-            await this._userManager.AddToRoleAsync(user, nameof(Roles.AuthRoles.User));
+        await this._userManager.AddToRoleAsync(user, nameof(Roles.AuthRoles.User));
         //if (!result.Succeeded) return false;
 
-        string body = "";
-        bool isHtml = false;
-        //using (StreamReader readtext = new StreamReader("template1.html"))
-        //{
-        //    body = readtext.ReadToEnd();
-        //}
-        //isHtml = true;
-        body += this._context.HttpContext.Request.Scheme + this._context.HttpContext.Request.Host.Value +
-            "/api/Auth/Confirm?token=" + this._tokenService.CreateUserToken(new AppUserDto()
-            {
-                UserName = user.UserName,
-                Email = user.Email,
-                MainRole = (await this._userManager.GetRolesAsync(user))[0],
-                Name = user.Name,
-                Surname = user.Surname,
-                BirthDay = user.BirthDay,
-            }).Token;
-
-        //this._emailService.Send(user.Email, "Welcome to club buddy", body, isHtml);
-        throw new UsernameExistException(body);
+        await this.SendConfirmation(new AppUserDto(user, (await this._userManager.GetRolesAsync(user)).First()));
+        
         return true;
     }
 
@@ -85,30 +85,19 @@ public class AuthService : IAuthService
             user = await this._userManager.FindByNameAsync(dto.UsernameOrEmail);
         }
 
-        if (user == null) throw new UsernameExistException();
-
-        if (await this._userManager.CheckPasswordAsync(user, dto.Password))
+        if (user == null || !(await this._userManager.CheckPasswordAsync(user, dto.Password)))
+            throw new WrongUsernameOrPasswordException();
+        if (!user.EmailConfirmed)
         {
-            return this._tokenService.CreateUserToken(new AppUserDto()
-            {
-                UserName = user.UserName,
-                Email = user.Email,
-                MainRole = (await this._userManager.GetRolesAsync(user))[0],
-                Name = user.Name,
-                Surname = user.Surname,
-                BirthDay = user.BirthDay,
-            });
+            await this.SendConfirmation(new AppUserDto(user, (await this._userManager.GetRolesAsync(user)).First()));
+            //throw new EmailNotConfirmedException();
         }
-        else throw new UsernameExistException();
+
+        return this._tokenService.CreateUserToken(new AppUserDto(user, (await this._userManager.GetRolesAsync(user))[0]));
     }
 
-    //[Authorize(Roles = "Admin, SuperAdmin")] ?
     public async Task CreateRoles()
     {
-        //if (!await this.TokenCheck(token)) return;
-        //if (!(await this._userManager.GetRolesAsync(this._universal)).
-        //        Any(r => r == nameof(Roles.AuthRoles.Admin) || r == nameof(Roles.AuthRoles.SuperAdmin))) return;
-
         foreach (var item in Enum.GetValues<Roles.AuthRoles>())
         {
             if (!await this._roleManager.RoleExistsAsync(item.ToString()))
@@ -127,23 +116,18 @@ public class AuthService : IAuthService
         return;
     }
 
-    async Task<bool> TokenCheck(string token)
+    public async Task<bool> ConfirmEmail(string token, bool skipValidation = true)
     {
-        //_universal = await this._userManager.Users.FirstAsync(u => u.Token == token && u.TokensExpr > DateTime.Now);
-        return _universal != null;
-    }
-
-    public async Task<bool> ConfirmEmail(string token)
-    {
-        if (await TokenCheck(token))
+        if (skipValidation || await this._tokenService.VakidateToken(token))
         {
-            _universal.EmailConfirmed = true;
-            await this._userManager.UpdateAsync(_universal);
+            AppUser user = await this._userManager.FindByNameAsync(this._tokenService.GetClaim(token, "UserName"));
+            if (!user.EmailConfirmed)
+            {
+                user.EmailConfirmed = true;
+                await this._userManager.UpdateAsync(user);
+            }
             return true;
         }
-        else
-        {
-            return false;
-        }
+        else return false;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using CSM1.Business.Dtos.AuthDtos;
 using CSM1.Business.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -20,11 +21,11 @@ public class AuthController : ControllerBase
     [HttpGet("Confirm")]
     public async Task<IActionResult> Get(string token)
     {
-        if (await this._authService.ConfirmEmail(token)) 
+        if (await this._authService.ConfirmEmail(token, false)) 
         {
             return Ok("confirmed");
         }
-        else 
+        else
         { 
             return BadRequest(); 
         }
@@ -44,6 +45,7 @@ public class AuthController : ControllerBase
         return await this._authService.Login(dto);
     }
 
+    [Authorize(Roles = "Admin, SuperAdmin")]
     [HttpGet("CreateRoles")]
     public async Task Post()
     {
