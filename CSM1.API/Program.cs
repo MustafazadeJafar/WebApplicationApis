@@ -13,25 +13,13 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Add services to the container.
-        builder.Services.AddDbContext<CSM1DbContext>(options =>
-        {
-            options.UseSqlServer(builder.Configuration.GetConnectionString("Local"));
-        }).AddIdentity<AppUser, IdentityRole>(opt =>
-        {
-            opt.SignIn.RequireConfirmedEmail = true;
-            opt.User.RequireUniqueEmail = true;
-            opt.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyz0123456789";
-            opt.Lockout.MaxFailedAccessAttempts = 5;
-            opt.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
-            opt.Password.RequireNonAlphanumeric = false;
-            opt.Password.RequiredLength = 4;
-        }).AddDefaultTokenProviders().AddEntityFrameworkStores<CSM1DbContext>();
-
+        builder.Services.AddCustomIdentity(builder.Configuration.GetConnectionString("Local"));
         builder.Services.AddRepositories();
         builder.Services.AddServices();
         builder.Services.AddBusinessLayer();
 
         builder.Services.AddControllers();
+
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();

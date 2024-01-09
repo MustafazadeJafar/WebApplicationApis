@@ -1,13 +1,14 @@
-﻿namespace CSM1.Business.Exceptions.Topic
-{
-    public class TopicExistException : Exception
-    {
-        public TopicExistException() : base("Topic already added")
-        {
-        }
+﻿using CSM1.Business.Exceptions.Common;
 
-        public TopicExistException(string? message) : base(message)
-        {
-        }
+namespace CSM1.Business.Exceptions.Topic;
+
+public class TopicExistException : BusinessExceptions
+{
+    public TopicExistException() : base("Topic already added")
+    {
+    }
+
+    public TopicExistException(string? message) : base(message)
+    {
     }
 }

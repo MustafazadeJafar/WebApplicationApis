@@ -46,7 +46,7 @@ public class BlogController : ControllerBase
             await _service.CreateAsync(dto);
             return StatusCode(StatusCodes.Status201Created);
         }
-        catch (TopicExistException ex)
+        catch (TopicExistException ex) ///////////////////////////////////////////
         {
             return Conflict(ex.Message);
         }
@@ -64,7 +64,7 @@ public class BlogController : ControllerBase
     }
     // //
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(int id, TopicUpdateDto dto)
+    public async Task<IActionResult> Update(int id, BlogDetailDto dto)
     {
         await _service.UpdateAsync(id, dto);
         return Ok();

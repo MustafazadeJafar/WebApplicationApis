@@ -2,7 +2,7 @@
 
 namespace CSM1.Business.Exceptions.Common;
 
-public class NotFoundException<T> : Exception where T : BaseEntity
+public class NotFoundException<T> : BusinessExceptions where T : BaseEntity
 {
     public NotFoundException() : base(typeof(T).Name + " not found")
     {

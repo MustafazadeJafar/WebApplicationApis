@@ -7,61 +7,47 @@ using Microsoft.EntityFrameworkCore;
 using CSM1.Core.Entities.Static;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authorization;
+using CSM1.Business.Exceptions.Auth;
 
 namespace CSM1.Business.Services.Implements;
 
 public class AuthService : IAuthService
 {
     AppUser _universal;
-    SignInManager<AppUser> _signInManager { get; }
     UserManager<AppUser> _userManager { get; }
     RoleManager<IdentityRole> _roleManager { get; }
+    ITokenService _tokenService { get; }
     IEmailService _emailService { get; }
     IHttpContextAccessor _context { get; }
 
-    public AuthService(SignInManager<AppUser> signInManager,
-        UserManager<AppUser> userManager,
+    public AuthService(UserManager<AppUser> userManager,
         RoleManager<IdentityRole> roleManager,
         IEmailService emailService,
-        IHttpContextAccessor context)
+        IHttpContextAccessor context,
+        ITokenService tokenService)
     {
-        this._signInManager = signInManager;
         this._userManager = userManager;
         this._roleManager = roleManager;
         this._emailService = emailService;
         this._context = context;
+        this._tokenService = tokenService;
     }
 
-    TokenDto CreateToken()
+    public async Task<bool> Register(RegisterDto dto)
     {
-        string charset = "abcdefghijklmnopqrstuvwxyz0123456789";
-        string token = "";
-
-        for (int i = 0; i < 255; i++)
-        {
-            token += charset[new Random().Next(charset.Length)];
-        }
-
-        return new TokenDto() { Token = token, TokensExpr = DateTime.Now.AddDays(3), };
-    }
-
-    public async Task<IdentityResult> Register(RegisterDto dto)
-    {
-        TokenDto token = CreateToken();
         var user = new AppUser
         {
             Name = dto.Name,
             Surname = dto.Surname,
             Email = dto.Email,
             UserName = dto.Username,
-            Token = token.Token,
-            TokensExpr = token.TokensExpr,
         };
         var result = await this._userManager.CreateAsync(user, dto.Password);
-        if (!result.Succeeded) return result;
+        if (!result.Succeeded) throw new UsernameExistException();
 
-        var roleResult = await this._userManager.AddToRoleAsync(user, nameof(Roles.AuthRoles.User));
-        if (!roleResult.Succeeded) return roleResult;
+        //result = 
+            await this._userManager.AddToRoleAsync(user, nameof(Roles.AuthRoles.User));
+        //if (!result.Succeeded) return false;
 
         string body = "";
         bool isHtml = false;
@@ -71,14 +57,22 @@ public class AuthService : IAuthService
         //}
         //isHtml = true;
         body += this._context.HttpContext.Request.Scheme + this._context.HttpContext.Request.Host.Value +
-            "/api/Auth/Confirm?token=" + token.Token;
+            "/api/Auth/Confirm?token=" + this._tokenService.CreateUserToken(new AppUserDto()
+            {
+                UserName = user.UserName,
+                Email = user.Email,
+                MainRole = (await this._userManager.GetRolesAsync(user))[0],
+                Name = user.Name,
+                Surname = user.Surname,
+                BirthDay = user.BirthDay,
+            }).Token;
 
-        this._emailService.Send(user.Email, "Welcome to club buddy", body, isHtml);
-
-        return roleResult;
+        //this._emailService.Send(user.Email, "Welcome to club buddy", body, isHtml);
+        throw new UsernameExistException(body);
+        return true;
     }
 
-    public async Task<string> Login(LoginDto dto)
+    public async Task<TokenDto> Login(LoginDto dto)
     {
         AppUser user;
 
@@ -90,37 +84,38 @@ public class AuthService : IAuthService
         {
             user = await this._userManager.FindByNameAsync(dto.UsernameOrEmail);
         }
-        if (user == null) return null;
 
-        TokenDto token = this.CreateToken();
-        user.Token = token.Token;
-        user.TokensExpr = token.TokensExpr;
+        if (user == null) throw new UsernameExistException();
 
-        var result = await this._signInManager.PasswordSignInAsync(user, dto.Password, dto.IsRemember, true);
-
-        return result.Succeeded ? token.Token : "_";
-    }
-
-    public async Task Logout()
-    {
-        // is there any purpose for it?
-        await this._signInManager.SignOutAsync();
+        if (await this._userManager.CheckPasswordAsync(user, dto.Password))
+        {
+            return this._tokenService.CreateUserToken(new AppUserDto()
+            {
+                UserName = user.UserName,
+                Email = user.Email,
+                MainRole = (await this._userManager.GetRolesAsync(user))[0],
+                Name = user.Name,
+                Surname = user.Surname,
+                BirthDay = user.BirthDay,
+            });
+        }
+        else throw new UsernameExistException();
     }
 
     //[Authorize(Roles = "Admin, SuperAdmin")] ?
-    public async Task CreateRoles(string token)
+    public async Task CreateRoles()
     {
-        if (!await this.TokenCheck(token)) return;
-        if (!(await this._userManager.GetRolesAsync(this._universal)).
-                Any(r => r == nameof(Roles.AuthRoles.Admin) || r == nameof(Roles.AuthRoles.SuperAdmin))) return;
+        //if (!await this.TokenCheck(token)) return;
+        //if (!(await this._userManager.GetRolesAsync(this._universal)).
+        //        Any(r => r == nameof(Roles.AuthRoles.Admin) || r == nameof(Roles.AuthRoles.SuperAdmin))) return;
 
         foreach (var item in Enum.GetValues<Roles.AuthRoles>())
         {
-            if (!await this._roleManager.RoleExistsAsync(nameof(item)))
+            if (!await this._roleManager.RoleExistsAsync(item.ToString()))
             {
                 var result = await this._roleManager.CreateAsync(new IdentityRole
                 {
-                    Name = nameof(item)
+                    Name = item.ToString()
                 });
                 if (!result.Succeeded)
                 {
@@ -128,12 +123,13 @@ public class AuthService : IAuthService
                 }
             }
         }
+
         return;
     }
 
     async Task<bool> TokenCheck(string token)
     {
-        _universal = await this._userManager.Users.FirstAsync(u => u.Token == token && u.TokensExpr > DateTime.Now);
+        //_universal = await this._userManager.Users.FirstAsync(u => u.Token == token && u.TokensExpr > DateTime.Now);
         return _universal != null;
     }
 

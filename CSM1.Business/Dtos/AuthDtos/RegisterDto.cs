@@ -24,13 +24,16 @@ public class RegisterDtoValidator : AbstractValidator<RegisterDto>
             NotEmpty().
             CustomLength(2, 32);
         RuleFor(x => x.Username).
-            NotNullNotEmpty().
+            NotNullOrEmpty().
             CustomLength(2, 32);
         RuleFor(x => x.Email).
-            NotNullNotEmpty().
+            NotNullOrEmpty().
             EmailAddress();
+        RuleFor(x => x.BirthDay).
+            NotNullOrEmpty().
+            CustomRange(DateTime.Now.AddYears(-80), DateTime.Now.AddYears(-18));
         RuleFor(x => x.Password).
-            NotNullNotEmpty().
+            NotNullOrEmpty().
             MinimumLength(4).
             Must(x => x.Any(Char.IsUpper)).
             Must(x => x.Any(Char.IsLower)).

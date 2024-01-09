@@ -34,19 +34,19 @@ public class AuthController : ControllerBase
     [HttpPost("Register")]
     public async Task<string> Post(RegisterDto dto)
     {
-        return ((await this._authService.Register(dto)).Succeeded.ToString());
+        return ((await this._authService.Register(dto)).ToString());
     }
 
     // POST api/<AuthController>/Login
     [HttpPost("Login")]
-    public async Task<string> Post(LoginDto dto)
+    public async Task<TokenDto> Post(LoginDto dto)
     {
         return await this._authService.Login(dto);
     }
 
     [HttpGet("CreateRoles")]
-    public async Task Post(string token)
+    public async Task Post()
     {
-        await this._authService.CreateRoles(token);
+        await this._authService.CreateRoles();
     }
 }
