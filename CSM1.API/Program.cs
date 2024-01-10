@@ -1,4 +1,4 @@
-using CSM1.Business;
+using CSM1.Business.Extensions;
 using CSM1.Business.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -57,6 +57,7 @@ public class Program
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
         {
+            app.UseSeedDatas();
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
@@ -70,5 +71,8 @@ public class Program
         app.MapControllers();
 
         app.Run();
+
+        //TODO: Add better configuration in order to run this shi..kimori only once
+        //TODO: Add better exception throwing through abstract method in order to make it customizable
     }
 }

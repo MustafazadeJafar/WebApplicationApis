@@ -15,10 +15,17 @@ using CSM1.Business.Dtos.AuthDtos;
 using CSM1.Business.Models;
 using CSM1.Core.Entities;
 using CSM1.DAL.Contexts;
+using Microsoft.AspNetCore.Builder;
+using CSM1.Core.Entities.Static;
+using System.Text;
+using CSM1.Business.Exceptions.Roles;
+using Microsoft.Extensions.Configuration;
+using CSM1.Business.Exceptions.Common;
+using CSM1.Business.Exceptions.Auth;
 
-namespace CSM1.Business;
+namespace CSM1.Business.Extensions;
 
-public static class ServiceRegistration
+public static class FeatureRegistrationExtensions
 {
 
     public static IServiceCollection AddRepositories(this IServiceCollection services)
@@ -38,6 +45,70 @@ public static class ServiceRegistration
 
         return services;
     }
+
+    static string ParseResultErrors(IEnumerable<IdentityError> errors)
+    {
+        StringBuilder sb = new StringBuilder();
+        foreach (IdentityError error in errors)
+        {
+            sb.Append(error.Description);
+            sb.Append(Environment.NewLine);
+        }
+        return sb.ToString().Trim();
+    }
+    static async Task CreateRoles(RoleManager<IdentityRole> roleManager, string[] roles)
+    {
+        foreach (string item in roles)
+        {
+            if (!await roleManager.RoleExistsAsync(item))
+            {
+                var result = await roleManager.CreateAsync(new IdentityRole
+                {
+                    Name = item
+                });
+                if (!result.Succeeded) throw new RoleCreateException(ParseResultErrors(result.Errors));
+            }
+        }
+    }
+    static async Task CreateUser(UserManager<AppUser> userManager, AppUserDto dto)
+    {
+        if (await userManager.FindByNameAsync(dto.UserName) == null) 
+        {
+            AppUser user = new()
+            {
+                UserName = dto.UserName,
+                Email = dto.Email,
+                BirthDay = dto.BirthDay,
+                Name = dto.Name,
+                Surname = dto.Surname,
+                EmailConfirmed = true
+            };
+            var result = await userManager.CreateAsync(user, dto.Password);
+            if (!result.Succeeded) throw new UsernameOrEmailExistException(ParseResultErrors(result.Errors));
+
+            result = await userManager.AddToRoleAsync(user, dto.MainRole);
+            if (!result.Succeeded) throw new RoleAddException(ParseResultErrors(result.Errors));
+        }
+    }
+    public static WebApplication UseSeedDatas(this WebApplication app)
+    {
+        app.Use(async (context, next) =>
+        {
+            using(var scope = context.RequestServices.CreateScope())
+            {
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
+                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+                await CreateRoles(roleManager, Enum.GetNames<Roles.AuthRoles>());
+                await CreateUser(userManager, app.Configuration.GetSection("SuperAdmin").Get<AppUserDto>());
+            }
+
+            await next();
+        });
+
+        return app;
+    }
+
 
     public static IServiceCollection AddCustomIdentity(this IServiceCollection services, string connection)
     {

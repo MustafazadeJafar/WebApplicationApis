@@ -1,13 +1,11 @@
 ﻿using CSM1.Business.Dtos.AuthDtos;
+using CSM1.Business.Exceptions.Auth;
 using CSM1.Business.ExternalServices.Interfaces;
 using CSM1.Business.Services.Interfaces;
 using CSM1.Core.Entities;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using CSM1.Core.Entities.Static;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Authorization;
-using CSM1.Business.Exceptions.Auth;
+using Microsoft.AspNetCore.Identity;
 
 namespace CSM1.Business.Services.Implements;
 
@@ -98,13 +96,13 @@ public class AuthService : IAuthService
 
     public async Task CreateRoles()
     {
-        foreach (var item in Enum.GetValues<Roles.AuthRoles>())
+        foreach (string item in Enum.GetNames<Roles.AuthRoles>())
         {
-            if (!await this._roleManager.RoleExistsAsync(item.ToString()))
+            if (!await this._roleManager.RoleExistsAsync(item))
             {
                 var result = await this._roleManager.CreateAsync(new IdentityRole
                 {
-                    Name = item.ToString()
+                    Name = item
                 });
                 if (!result.Succeeded)
                 {
