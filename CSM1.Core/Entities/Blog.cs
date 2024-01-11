@@ -2,7 +2,7 @@
 
 public class Blog : BaseEntity
 {
-    public string AppUserUserName { get; set; }
+    public string AppUserId { get; set; }
 
     // //
     public string TextContent { get; set; }

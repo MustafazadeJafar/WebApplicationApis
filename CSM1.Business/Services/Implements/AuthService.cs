@@ -31,7 +31,7 @@ public class AuthService : IAuthService
         this._tokenService = tokenService;
     }
 
-    public async Task SendConfirmation(AppUserDto dto)
+    public void SendConfirmation(AppUserDto dto)
     {
         string body = "";
         bool isHtml = false;
@@ -65,8 +65,8 @@ public class AuthService : IAuthService
         await this._userManager.AddToRoleAsync(user, nameof(Roles.AuthRoles.User));
         //if (!result.Succeeded) return false;
 
-        await this.SendConfirmation(new AppUserDto(user, (await this._userManager.GetRolesAsync(user)).First()));
-        
+        this.SendConfirmation(await AppUserDto.Create(user, this._userManager));
+
         return true;
     }
 
@@ -87,11 +87,11 @@ public class AuthService : IAuthService
             throw new WrongUsernameOrPasswordException();
         if (!user.EmailConfirmed)
         {
-            await this.SendConfirmation(new AppUserDto(user, (await this._userManager.GetRolesAsync(user)).First()));
-            //throw new EmailNotConfirmedException();
+            this.SendConfirmation(await AppUserDto.Create(user, this._userManager));
+            throw new EmailNotConfirmedException();
         }
 
-        return this._tokenService.CreateUserToken(new AppUserDto(user, (await this._userManager.GetRolesAsync(user))[0]));
+        return this._tokenService.CreateUserToken(await AppUserDto.Create(user, this._userManager));
     }
 
     public async Task CreateRoles()
@@ -118,7 +118,7 @@ public class AuthService : IAuthService
     {
         if (skipValidation || await this._tokenService.VakidateToken(token))
         {
-            AppUser user = await this._userManager.FindByNameAsync(this._tokenService.GetClaim(token, "UserName"));
+            AppUser user = await this._userManager.FindByNameAsync(ITokenService.GetJwtClaim(token, "UserName"));
             if (!user.EmailConfirmed)
             {
                 user.EmailConfirmed = true;

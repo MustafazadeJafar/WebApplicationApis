@@ -7,4 +7,7 @@ public class AppUser : IdentityUser
     public string Name { get; set; }
     public string Surname { get; set; }
     public DateTime BirthDay { get; set; }
+
+    // //
+    public IEnumerable<Blog> Blogs { get; set; }
 }

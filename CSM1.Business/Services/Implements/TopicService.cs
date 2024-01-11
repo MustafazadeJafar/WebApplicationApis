@@ -24,7 +24,7 @@ public class TopicService : ITopicService
     public async Task CreateAsync(TopicCreateDto dto)
     {
         if (await _repo.IsExistAsync(r => r.Name.ToLower() == dto.Name.ToLower()))
-            throw new TopicExistException();
+            throw new EntityExistException();
         await _repo.CreateAsync(_mapper.Map<Topic>(dto));
         await _repo.SaveAsync();
     }
@@ -38,10 +38,10 @@ public class TopicService : ITopicService
         return _mapper.Map<TopicDetailDto>(data);
     }
 
-    public async Task RemoveAsync(int id)
+    public async Task RemoveAsync(int id, bool soft = true)
     {
         var data = await _checkId(id);
-        _repo.Remove(data);
+        _repo.Remove(data, soft);
         await _repo.SaveAsync();
     }
 
@@ -51,7 +51,7 @@ public class TopicService : ITopicService
         if (dto.Name.ToLower() != data.Name.ToLower())
         {
             if (await _repo.IsExistAsync(r => r.Name.ToLower() == dto.Name.ToLower()))
-                throw new TopicExistException();
+                throw new EntityExistException();
             data = _mapper.Map(dto, data);
             await _repo.SaveAsync();
         }
@@ -61,7 +61,6 @@ public class TopicService : ITopicService
     {
         if (id <= 0) throw new ArgumentException();
         var data = await _repo.GetByIdAsync(id, isTrack);
-        if (data == null) throw new NotFoundException<Topic>();
-        return data;
+        return data ?? throw new NotFoundException<Topic>();
     }
 }

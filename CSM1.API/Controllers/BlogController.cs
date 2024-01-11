@@ -1,6 +1,5 @@
 ﻿using CSM1.Business.Dtos.BlogDtos;
 using CSM1.Business.Dtos.TopicDtos;
-using CSM1.Business.Exceptions.Topic;
 using CSM1.Business.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 

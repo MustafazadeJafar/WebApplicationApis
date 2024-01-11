@@ -45,8 +45,4 @@ public class TokenService : ITokenService
         var result = await handler.ValidateTokenAsync(token, ITokenService.JwtTokenValidationParametrs(this._parameters));
         return result.IsValid;
     }
-
-    public string GetClaim(string token, string type)
-        => new JwtSecurityTokenHandler().ReadJwtToken(token).Claims.First(c => c.Type == type).Value;
-    
 }
