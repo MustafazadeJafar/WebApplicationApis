@@ -1,6 +1,8 @@
 ﻿using CSM1.Business.Dtos.BlogDtos;
 using CSM1.Business.Dtos.TopicDtos;
+using CSM1.Business.Exceptions.Common;
 using CSM1.Business.Services.Interfaces;
+using CSM1.Core.Entities.Common;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -45,7 +47,7 @@ public class BlogController : ControllerBase
             await _service.CreateAsync(dto);
             return StatusCode(StatusCodes.Status201Created);
         }
-        catch (TopicExistException ex) ///////////////////////////////////////////
+        catch (EntityExistException<BaseEntity> ex) ///////////////////////////////////////////
         {
             return Conflict(ex.Message);
         }

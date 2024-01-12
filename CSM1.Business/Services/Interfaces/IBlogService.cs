@@ -4,7 +4,7 @@ namespace CSM1.Business.Services.Interfaces;
 
 public interface IBlogService
 {
-    public IEnumerable<BlogDetailDto> GetAll(params string[] includes);
+    public IEnumerable<BlogListItemDto> GetAll(params string[] includes);
     public Task<BlogDetailDto> GetByIdAsync(int id, params string[] includes);
     public Task CreateAsync(BlogCreateDto dto);
     public Task RemoveAsync(int id, bool soft = true);

@@ -1,5 +1,7 @@
 ﻿using CSM1.Business.Dtos.TopicDtos;
+using CSM1.Business.Exceptions.Common;
 using CSM1.Business.Services.Interfaces;
+using CSM1.Core.Entities.Common;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -24,31 +26,13 @@ public class TopicsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<IActionResult> Get(int id)
     {
-        try
-        {
-            return Ok(await _service.GetByIdAsync(id));
-        }
-        catch (Exception ex)
-        {
-            return Problem(ex.Message);
-        }
+        return Ok(await _service.GetByIdAsync(id));
     }
     [HttpPost]
     public async Task<IActionResult> Post(TopicCreateDto dto)
     {
-        try
-        {
-            await _service.CreateAsync(dto);
-            return StatusCode(StatusCodes.Status201Created);
-        }
-        catch (TopicExistException ex)
-        {
-            return Conflict(ex.Message);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(ex.Message);
-        }
+        await _service.CreateAsync(dto);
+        return StatusCode(StatusCodes.Status201Created);
     }
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)

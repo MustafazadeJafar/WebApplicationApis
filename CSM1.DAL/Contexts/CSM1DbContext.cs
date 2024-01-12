@@ -19,6 +19,7 @@ public class CSM1DbContext : IdentityDbContext<AppUser>
     public DbSet<BlogTopic> BlogTopics { get; set; }
     public DbSet<FileData> FileDatas { get; set; }
     public DbSet<AppUser> AppUsers { get; set; }
+    public DbSet<Comment> Comments { get; set; }
 
     // //
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

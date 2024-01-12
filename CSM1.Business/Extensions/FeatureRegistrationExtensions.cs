@@ -32,6 +32,7 @@ public static class FeatureRegistrationExtensions
     {
         services.AddScoped<ITopicRepository, TopicRepository>();
         services.AddScoped<IBlogRepository, BlogRepository>();
+        services.AddScoped<ICommentRepository, CommentRepository>();
 
         return services;
     }
@@ -42,6 +43,7 @@ public static class FeatureRegistrationExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IBlogService, BlogService>();
         services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<ICommentService, CommentService>();
 
         return services;
     }

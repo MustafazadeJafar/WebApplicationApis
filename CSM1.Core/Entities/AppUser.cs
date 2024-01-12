@@ -9,5 +9,6 @@ public class AppUser : IdentityUser
     public DateTime BirthDay { get; set; }
 
     // //
-    public IEnumerable<Blog> Blogs { get; set; }
+    public IEnumerable<Blog>? Blogs { get; set; }
+    public IEnumerable<Comment>? Comments { get; set; }
 }

@@ -3,7 +3,6 @@ using CSM1.Business.Dtos.TopicDtos;
 using CSM1.Business.Repositories.Interfaces;
 using CSM1.Business.Services.Interfaces;
 using CSM1.Business.Exceptions.Common;
-using CSM1.Business.Exceptions.Topic;
 using CSM1.Core.Entities;
 
 namespace CSM1.Business.Services.Implements;
@@ -24,7 +23,7 @@ public class TopicService : ITopicService
     public async Task CreateAsync(TopicCreateDto dto)
     {
         if (await _repo.IsExistAsync(r => r.Name.ToLower() == dto.Name.ToLower()))
-            throw new EntityExistException();
+            throw new EntityExistException<Topic>();
         await _repo.CreateAsync(_mapper.Map<Topic>(dto));
         await _repo.SaveAsync();
     }
@@ -51,7 +50,7 @@ public class TopicService : ITopicService
         if (dto.Name.ToLower() != data.Name.ToLower())
         {
             if (await _repo.IsExistAsync(r => r.Name.ToLower() == dto.Name.ToLower()))
-                throw new EntityExistException();
+                throw new EntityExistException<Topic>();
             data = _mapper.Map(dto, data);
             await _repo.SaveAsync();
         }

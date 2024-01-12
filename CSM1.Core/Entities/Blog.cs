@@ -13,4 +13,5 @@ public class Blog : BaseEntity
     public AppUser? AppUser { get; set; }
     public IEnumerable<FileData>? FileDatas { get; set; }
     public IEnumerable<BlogTopic>? BlogTopics { get; set; }
+    public IEnumerable<Comment>? Comments { get; set; }
 }
