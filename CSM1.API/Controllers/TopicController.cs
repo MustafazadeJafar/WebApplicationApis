@@ -1,7 +1,6 @@
 ﻿using CSM1.Business.Dtos.TopicDtos;
-using CSM1.Business.Exceptions.Common;
 using CSM1.Business.Services.Interfaces;
-using CSM1.Core.Entities.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -19,6 +18,7 @@ public class TopicsController : ControllerBase
         _service = service;
     }
     [HttpGet]
+    [Authorize]
     public IActionResult Get()
     {
         return Ok(_service.GetAll());

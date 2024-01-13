@@ -20,34 +20,12 @@ using CSM1.Core.Entities.Static;
 using System.Text;
 using CSM1.Business.Exceptions.Roles;
 using Microsoft.Extensions.Configuration;
-using CSM1.Business.Exceptions.Common;
 using CSM1.Business.Exceptions.Auth;
 
 namespace CSM1.Business.Extensions;
 
 public static class FeatureRegistrationExtensions
 {
-
-    public static IServiceCollection AddRepositories(this IServiceCollection services)
-    {
-        services.AddScoped<ITopicRepository, TopicRepository>();
-        services.AddScoped<IBlogRepository, BlogRepository>();
-        services.AddScoped<ICommentRepository, CommentRepository>();
-
-        return services;
-    }
-    public static IServiceCollection AddServices(this IServiceCollection services)
-    {
-        services.AddScoped<ITopicService, TopicService>();
-        services.AddScoped<IEmailService, EmailService>();
-        services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<IBlogService, BlogService>();
-        services.AddScoped<ITokenService, TokenService>();
-        services.AddScoped<ICommentService, CommentService>();
-
-        return services;
-    }
-
     static string ParseResultErrors(IEnumerable<IdentityError> errors)
     {
         StringBuilder sb = new StringBuilder();
@@ -92,6 +70,8 @@ public static class FeatureRegistrationExtensions
             if (!result.Succeeded) throw new RoleAddException(ParseResultErrors(result.Errors));
         }
     }
+
+
     public static WebApplication UseSeedDatas(this WebApplication app)
     {
         app.Use(async (context, next) =>
@@ -112,6 +92,25 @@ public static class FeatureRegistrationExtensions
     }
 
 
+    public static IServiceCollection AddRepositories(this IServiceCollection services)
+    {
+        services.AddScoped<ITopicRepository, TopicRepository>();
+        services.AddScoped<IBlogRepository, BlogRepository>();
+        services.AddScoped<ICommentRepository, CommentRepository>();
+
+        return services;
+    }
+    public static IServiceCollection AddServices(this IServiceCollection services)
+    {
+        services.AddScoped<ITopicService, TopicService>();
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IBlogService, BlogService>();
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<ICommentService, CommentService>();
+
+        return services;
+    }
     public static IServiceCollection AddCustomIdentity(this IServiceCollection services, string connection)
     {
         services.AddDbContext<CSM1DbContext>(options =>
@@ -130,7 +129,6 @@ public static class FeatureRegistrationExtensions
 
         return services;
     }
-
     public static IServiceCollection AddJwtAuth(this IServiceCollection services, JwtTokenParameters parameters)
     {
         services.AddAuthentication(options =>
@@ -146,7 +144,6 @@ public static class FeatureRegistrationExtensions
 
         return services;
     }
-
     public static IServiceCollection AddBusinessLayer(this IServiceCollection services)
     {
         services.AddFluentValidation(x => x.RegisterValidatorsFromAssemblyContaining<RegisterDtoValidator>());
